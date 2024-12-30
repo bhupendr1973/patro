@@ -1,0 +1,140 @@
+Android Studio Koala | 2024.1.1 Patch 1
+Flutter 3.22.3
+लोकाभिरामं रणरंगधीरं राजीवनेत्रं रघुवंशनाथं। कारुण्यरूपं करुणाकरं तं श्रीरामचन्द्रं शरणं प्रपद्ये।।
+मनोजवं मारुततुल्यवेगं जितेन्द्रियं बुद्धिमतां वरिष्ठम। वातात्मजं वानरयूथमुख्यं श्रीराम दूतं शरणं प्रपद्ये।।
+https://github.com/Bhupendra12345678/patro
+https://github.com/gayatraphuyal2/shrayesh-dahal
+https://github.com/Dahalshrayesh/shrayesh
+https://github.com/Dahalshrayesh/shrayesh
+Android Studio Giraffe | 2022.3.1 Patch 1
+ Flutter 3.22.3 • channel stable • https://github.com/flutter/flutter.git
+%JAVA_HOME%\bin
+https://mockbin.io/
+
+payple account   boodhoom94@gmail.com
+bhupendr1973 = github id
+buddhom71@gmail.com
+boodhoom94@gmail.com
+shrayeshbhai8@gmail.com
+shrayeshdahal@gmail.com
+bhupendradahal1973@gmail.com
+dahalbhupendra841@gmail.com
+flutter build windows
++919928270862   suresh Bhinaju
+
+
+shreeyadahal020@gmail.com
+gayatraphuyal2@gmail.com
+
+keytool -genkey -v -keystore C:\app\upload-keystore.jks -storetype JKS -keyalg RSA -keysize 2048 -validity 10000 -alias upload
+
+
+
+
+
+    <button class="btn btn-outline-dark btn-sm" id="app_open_link" style="display: none;" onclick="location.href='brihat://calendar'">OPEN IN APP</button>
+        <div id="date_converter_div" style="display: none;">
+          <a id="solarnsconverter" href="https://brihatrb.com.np/solarnsconverter/solarnsconverter.html"> &raquo; Solar Nepal Sambat Converter &laquo; </a>
+        </div>
+
+
+
+https://www.youtube.com/watch?v=QTesNSazTDI                    github 100mb limit 
+https://www.sourcenepal.com/nepali-panchang/
+
+
+https://www.youtube.com/watch?v=FGjp_0jdX98&t=4s
+
+
+https://www.youtube.com/watch?v=ThSaI0kuez8
+
+
+YMm2NtdBYWooq7cb 
+shrayeshdahal
+
+
+https://github.com/task-json/task.json-web?tab=readme-ov-file
+
+https://tagmp3.net/
+
+ Credential Manager
+
+https://www.youtube.com/watch?v=30p9QfybWZg
+om shree bard murtaye namah      https://www.youtube.com/shorts/lv2Y1Oratag
+
+
+
+./gradlew signingReport
+
+ 54:B0:53:BB:97:63:1A:F5:17:81:A0:97:CC:CB:F2:5D:0D:A5:3D:03
+ FC:82:A3:CE:EE:25:8F:07:DF:99:79:D5:60:09:E1:92:D3:86:F1:4B:9D:B6:F1:F6:F9:13:BD:35:49:06:43:AD
+
+958216239698-2gdcr3mefli3qa3qff3c9tvg9nse9pag.apps.googleusercontent.com      clint id
+
+
+
+
+
+
+https://www.virustotal.com/gui/home/upload
+https://support.google.com/googleplay/android-developer/contact/protectappeals
+
+flutter build apk --split-per-abi    use this
+flutter build apk --release
+flutter build appbundle
+
+<uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
+
+shrayeshbhai8@gmail.com   ma blacckhole
+forrewardonly4987@gmail.com   ma musicfy
+shrayeshdahal@gmail.com       ma patro
+
+
+github:=
+
+buddhom71@gmail.com
+boodhoom94@gmail.com
+shrayeshdahal@gmail.com
+ahreeyadahal020@gmail.com
+
+
+'uploadDateRaw': song.uploadDateRaw,
+ algorithmicDarkeningAllowed: true,
+
+
+babu ko account no   11010017500889
+
+SHREEYA2064
+
+password  Shreeya@123456
+  kanchi ko account 11010017500890  
+
+
+
+https://www.youtube.com/shorts/py3fDRtMoyA
+
+
+https://www.youtube.com/shorts/5y1W-P6bawU
+
+https://www.youtube.com/watch?v=eiCwz2S3BAk
+
+https://www.youtube.com/watch?v=i6gg9bOfcxs
+
+
+bhupendradahal1973@gmail.com
+
+
+
+
+
+storePassword=Darjeeling@123
+keyPassword=Darjeeling@123
+keyAlias=upload
+storeFile=C:/music8/upload-keystore.jks
+
+
+
+
+//file name   key.properties//
