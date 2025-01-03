@@ -51,6 +51,7 @@ import '../Backup/config.dart';
 import '../Backup/dominant_color.dart';
 import '../Backup/seek_bar.dart';
 import '../Backup/textinput_dialog.dart';
+import '../Downloads/download_button.dart';
 import '../News/view/home_screen.dart';
 
 final _lyricsController = FlipCardController();
@@ -645,7 +646,7 @@ class _NowPlayingPageState extends State<NowPlayingPage> {
                   buildMarqueeText(
                     mediaItem.artist!,
                     Theme.of(context).colorScheme.secondary,
-                    screenHeight * 0.017,
+                    screenHeight * 0.025,
                     FontWeight.w500,
                   ),
               ],
@@ -854,25 +855,14 @@ class _NowPlayingPageState extends State<NowPlayingPage> {
       alignment: WrapAlignment.center,
       spacing: 78,
       children: [
+        if (!offlineMode.value)
         ValueListenableBuilder<bool>(
           valueListenable: songOfflineStatus,
           builder: (_, value, __) {
-            return IconButton(
-              icon: Icon(
-                size: 30,
-                value ? Icons.download_done_rounded : Icons.download_rounded,
-                color: value ?Theme.of(context).colorScheme.secondary : Theme.of(context).iconTheme.color,
-              ),
-              iconSize: 30,
-              onPressed: () {
-                if (value) {
-                  removeSongFromOffline(audioId);
-                } else {
-                  makeSongOffline(mediaItemToMap(mediaItem));
-                }
-
-                songOfflineStatus.value = !songOfflineStatus.value;
-              },
+            return DownloadButton(
+                size: 30.0,
+                icon: 'download',
+                data: mediaItemToMap(mediaItem)
             );
           },
         ),

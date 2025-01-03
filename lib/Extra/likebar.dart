@@ -40,7 +40,7 @@ class LikedBar extends StatelessWidget {
       this.song,
       this.clearPlaylist, {
         this.backgroundColor,
-        this.showMusicDuration = false,
+        this.showMusicDuration = true,
         this.onPlay,
         this.onRemove,
         super.key,
@@ -180,65 +180,76 @@ class LikedBar extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         if (!offlineMode.value)
-          Row(
-            children: [
-              ValueListenableBuilder<bool>(
-                valueListenable: songLikeStatus,
-                builder: (_, value, __) {
-                  return IconButton(
-                    color: Theme.of(context).colorScheme.secondary,
-                    icon: Icon(likeStatusToIconMapper[value]),
-                    onPressed: () {
-                      songLikeStatus.value = !songLikeStatus.value;
-                      updateSongLikeStatus(
-                        song['ytid'],
-                        songLikeStatus.value,
-                      );
-                      final likedSongsLength = currentLikedSongsLength.value;
-                      currentLikedSongsLength.value =
-                      value ? likedSongsLength + 1 : likedSongsLength - 1;
-                    },
-                  );
-                },
-              ),
-              if (onRemove != null)
-                IconButton(
-                  padding: const EdgeInsets.only(bottom: 19),
-                  color: primaryColor,
-                  icon: const Icon(FluentIcons.delete_24_filled),
-                  onPressed: () => onRemove!(),
-                ),
-
-            ],
-          ),
-        Column(
+        Row(
           children: [
             ValueListenableBuilder<bool>(
-              valueListenable: songOfflineStatus,
-              builder: (_, value, __) {
-                return IconButton(
-                  color: primaryColor,
-                  icon: Icon(
-                    value ? Icons.download_done_rounded : Icons.download_rounded,
-                    color: value ? Theme.of(context).colorScheme.secondary : Theme.of(context).iconTheme.color,
-                  ),
-                  onPressed: () {
-                    if (value) {
-                      removeSongFromOffline(song['ytid']);
-                    } else {
-                      makeSongOffline(song);
-                    }
+                    valueListenable: songOfflineStatus,
+                    builder: (_, value, __) {
+                      return PopupMenuButton(
+                        icon: const Icon(
+                          size: 25,
+                          Icons.more_vert_rounded,
 
-                    songOfflineStatus.value = !songOfflineStatus.value;
-                  },
-                );
-              },
-            ),
-            if (showMusicDuration && song['duration'] != null)
-              Text(formatDuration(song['duration'])),
-          ],
-        ),
-      ],
+                        ),
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: BorderRadius.all(
+                            Radius.circular(15.0),
+                          ),
+                        ),
+                        itemBuilder: (context) => [
+                          PopupMenuItem(
+                            value: 0,
+                            child: Row(
+                              children: [
+                                 Icon(
+                                  Icons.delete_rounded,
+                                  color: Theme.of(context).colorScheme.secondary
+                                ),
+                                const SizedBox(
+                                  width: 10.0,
+                                ),
+                                Text(
+                                  context.l10n!
+                                      .delete,
+                                ),
+                              ],
+                            ),
+                          ),
+                          PopupMenuItem(
+                            value: 1,
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.lock_clock,
+                                ),
+                                const SizedBox(
+                                  width: 10.0,
+                                ),
+                      if (showMusicDuration && song['duration'] != null)
+                      Text(formatDuration(song['duration'])),
+                              ],
+                            ),
+                          )
+                        ],
+                        onSelected: (int? value) async {
+                          if (value == 0) {
+                            songLikeStatus.value = !songLikeStatus.value;
+                            updateSongLikeStatus(
+                              song['ytid'],
+                              songLikeStatus.value,
+                            );
+                            final likedSongsLength = currentLikedSongsLength.value;
+                            currentLikedSongsLength.value =
+                            value != null ? likedSongsLength + 1 : likedSongsLength - 1;
+                          }
+
+                        },
+                      );
+                    }
+                )
+              ],
+            )
+        ]
     );
   }
 }

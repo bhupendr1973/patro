@@ -22,9 +22,7 @@ import 'dart:io';
 import 'package:shrayesh_patro/Downloads/service.dart';
 import 'package:audiotagger/audiotagger.dart';
 import 'package:audiotagger/models/tag.dart';
-import 'package:shrayesh_patro/Downloads/lyrics.dart';
 import 'package:shrayesh_patro/Backup/ext_storage_provider.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:hive/hive.dart';
@@ -34,7 +32,15 @@ import 'package:metadata_god/metadata_god.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
+import 'package:http/http.dart' as http;
 
+import '../API/shrayesh_patro.dart';
+import '../main.dart';
+import '../services/data_manager.dart';
+
+
+
+final _yt = YoutubeExplode();
 class Download with ChangeNotifier {
   static final Map<String, Download> _instances = {};
   final String id;
@@ -97,6 +103,36 @@ class Download with ChangeNotifier {
     }
     final RegExp avoid = RegExp(r'[\.\\\*\:\"\?#/;\|]');
     data['title'] = data['title'].toString().split('(From')[0].trim();
+    final audioDirPath = await ExtStorageProvider.getExtStorage(dirName: 'Music', writeAccess: true);
+
+    final artworkDirPath = '$audioDirPath/Pictures';
+    final String ytid = data['ytid'];
+    final audioFile = File('$audioDirPath/$ytid.m4a');
+    final artworkFile0 = File('$artworkDirPath/$ytid.jpg');
+
+    await Directory(audioDirPath!).create(recursive: true);
+    await Directory(artworkDirPath).create(recursive: true);
+
+    final audioManifest = await getSongManifest(ytid);
+    final stream = _yt.videos.streamsClient.get(audioManifest);
+    final fileStream = audioFile.openWrite();
+    await stream.pipe(fileStream);
+    await fileStream.flush();
+    await fileStream.close();
+
+    final artworkFile = await _downloadAndSaveArtworkFile(
+      data['highResImage'],
+      artworkFile0.path,
+    );
+
+    if (artworkFile != null) {
+      data['artworkPath'] = artworkFile.path;
+      data['highResImage'] = artworkFile.path;
+      data['lowResImage'] = artworkFile.path;
+    }
+    data['audioPath'] = audioFile.path;
+    userOfflineSongs.add(data);
+    addOrUpdateData('userNoBackup', 'offlineSongs', userOfflineSongs);
 
     String filename = '';
     final int downFilename =
@@ -108,7 +144,7 @@ class Download with ChangeNotifier {
     } else {
       filename = '${data["title"]}';
     }
-    // String filename = '${data["title"]} - ${data["artist"]}';
+
     String dlPath =
     Hive.box('settings').get('downloadPath', defaultValue: '') as String;
     Logger.root.info('Cached Download path: $dlPath');
@@ -312,7 +348,6 @@ class Download with ChangeNotifier {
     late String filepath2;
     String? appPath;
     final List<int> bytes = [];
-    String lyrics = '';
     final artname = fileName.replaceAll('.m4a', '.jpg');
     if (!Platform.isWindows) {
       Logger.root.info('Getting App Path for storing image');
@@ -378,14 +413,12 @@ class Download with ChangeNotifier {
     int recieved = 0;
     Client? client;
     Stream<List<int>> stream;
-    // Download from yt
+
     if (data['url'].toString().contains('google')) {
-      // Use preferredYtDownloadQuality to check for quality first
       final AudioOnlyStreamInfo streamInfo =
           (await Services.instance.getStreamInfo(data['ytid'].toString()))
               .last;
       total = streamInfo.size.totalBytes;
-      // Get the actual stream
       stream = Services.instance.getStreamClient(streamInfo);
     } else {
       Logger.root.info('Connecting to Client');
@@ -403,7 +436,7 @@ class Download with ChangeNotifier {
         notifyListeners();
         if (!download && client != null) {
           client.close();
-          // need to add for yt as well
+
         }
       } catch (e) {
         Logger.root.severe('Error in download: $e');
@@ -413,32 +446,14 @@ class Download with ChangeNotifier {
         Logger.root.info('Download complete, modifying file');
         final file = File(filepath!);
         await file.writeAsBytes(bytes);
-
         final client = HttpClient();
-        final HttpClientRequest request2 =
-        await client.getUrl(Uri.parse(data['highResImage'].toString()));
-        final HttpClientResponse response2 = await request2.close();
-        final bytes2 = await consolidateHttpClientResponseBytes(response2);
-        final File file2 = File(filepath2);
-
-        file2.writeAsBytesSync(bytes2);
         try {
-          Logger.root.info('Checking if lyrics required');
+          Logger.root.info('Download complete, modifying file');
           if (downloadLyrics) {
-            Logger.root.info('downloading lyrics');
-            final Map res = await Lyrics.getLyrics(
-              id: data['id'].toString(),
-              title: data['title'].toString(),
-              artist: data['artist']?.toString() ?? '',
-              album: data['album']?.toString() ?? '',
-              duration: data['duration']?.toString() ?? '180',
-              saavnHas: data['has_lyrics'] == 'true',
-            );
-            lyrics = res['lyrics'].toString();
+            Logger.root.info('download');
           }
         } catch (e) {
           Logger.root.severe('Error fetching lyrics: $e');
-          lyrics = '';
         }
 
         Logger.root.info('Getting audio tags');
@@ -457,19 +472,12 @@ class Download with ChangeNotifier {
               path: filepath!,
               tag: tag,
             );
-            // await Future.delayed(const Duration(seconds: 1), () async {
-            //   if (await file2.exists()) {
-            //     await file2.delete();
-            //   }
-            // });
           } catch (e) {
             Logger.root.severe('Error editing tags: $e');
           }
         } else {
-          // Set metadata to file
           if (data['language'].toString() == 'YouTube') {
             Logger.root.info('Started tag editing');
-            // skipping metadata for saavn for the time being as it corrupts the file
             await MetadataGod.writeMetadata(
               file: filepath!,
               metadata: Metadata(
@@ -478,10 +486,8 @@ class Download with ChangeNotifier {
                 album: data['album'].toString(),
                 durationMs: int.parse(data['duration'].toString()) * 1000,
                 fileSize: file.lengthSync(),
-                picture: Picture(
-                  data: bytes2,
-                  mimeType: 'image/jpeg',
-                ),
+
+
               ),
             );
           }
@@ -513,10 +519,7 @@ class Download with ChangeNotifier {
         Hive.box('downloads').put(songData['id'].toString(), songData);
 
         Logger.root.info('Everything Done!');
-        // ShowSnackBar().showSnackBar(
-        //   context,
-        //   '"${data['title']}" ${AppLocalizations.of(context)!.downed}',
-        // );
+
       } else {
         download = true;
         progress = 0.0;
@@ -525,4 +528,25 @@ class Download with ChangeNotifier {
       }
     });
   }
+}
+Future<File?> _downloadAndSaveArtworkFile(String url, String filePath) async {
+  try {
+    final response = await http.get(Uri.parse(url));
+
+    if (response.statusCode == 200) {
+      final file = File(filePath);
+      await file.writeAsBytes(response.bodyBytes);
+      return file;
+    } else {
+      logger.log(
+        'Failed to download file. Status code: ${response.statusCode}',
+        null,
+        null,
+      );
+    }
+  } catch (e, stackTrace) {
+    logger.log('Error downloading and saving file', e, stackTrace);
+  }
+
+  return null;
 }

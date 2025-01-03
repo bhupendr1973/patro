@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:shrayesh_patro/Update/check_update.dart';
 import 'package:shrayesh_patro/Update/update.dart';
-import 'package:shrayesh_patro/extensions/l10n.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:shrayesh_patro/screens/search_page.dart';
 import 'package:shrayesh_patro/screens/settings_page.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -135,8 +135,9 @@ class _PatroState extends State<Patro> {
       resizeToAvoidBottomInset: false,
       backgroundColor: Colors.transparent,
       appBar: AppBar(
-        elevation: 0,
+        elevation: 20,
         backgroundColor: Colors.transparent,
+        title: Text(AppLocalizations.of(context)!.shrayesh),
         centerTitle: true,
         actions: <Widget>[
           IconButton(

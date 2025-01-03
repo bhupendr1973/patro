@@ -253,5 +253,7 @@
   "themeSaved": "Theme saved!",
 
   "playerScreenBackground": "Player Screen Background",
-  "playerScreenBackgroundSub": "Selected Background will be shown in Player Screen"
+  "playerScreenBackgroundSub": "Selected Background will be shown in Player Screen",
+  "removeFromLikedSongs": "Delete Favorite",
+  "addToLikedSongs": "Add To Favorite"
 }

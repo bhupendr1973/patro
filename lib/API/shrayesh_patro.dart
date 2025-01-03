@@ -102,7 +102,7 @@ Future<List> getRecommendedSongs() async {
       final playlistSongs = [...userLikedSongsList, ...userRecentlyPlayed];
 
       if (globalSongs.isEmpty) {
-        const playlistId = 'PLXCoHsJ9oLefSBV4aF7gTj3Rs9_HvubEJ';
+        const playlistId = 'PL9bw4S5ePsEFAfCoWq16pRDYD9UwN9UTW';
         globalSongs = await getSongsFromPlaylist(playlistId);
       }
 
@@ -413,7 +413,7 @@ Future<List<Map<String, int>>> getSkipSegments(String id) async {
 
 Future<Map> getRandomSong() async {
   if (globalSongs.isEmpty) {
-    const playlistId = 'PLXCoHsJ9oLee87DItlNWSw2R7VAkTcq5q';
+    const playlistId = 'PLQlb0UatjMVYRBsTuIA9RcfJauhhLwwDc';
     globalSongs = await getSongsFromPlaylist(playlistId);
   }
 

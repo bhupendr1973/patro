@@ -182,76 +182,67 @@ class SongBar extends StatelessWidget {
   Widget _buildActionButtons(BuildContext context, Color primaryColor) {
     final songLikeStatus =
     ValueNotifier<bool>(isSongAlreadyLiked(song['ytid']));
-    final songOfflineStatus =
-    ValueNotifier<bool>(isSongAlreadyOffline(song['ytid']));
+    return PopupMenuButton<String>(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
 
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (!offlineMode.value)
-          Row(
-            children: [
-              ValueListenableBuilder<bool>(
-                valueListenable: songLikeStatus,
-                builder: (_, value, __) {
-                  return IconButton(
-                     padding: const EdgeInsets.only(bottom: 19),
-                    icon: Icon(
+      icon: const Icon(
+        size: 25,
+        Icons.more_vert_rounded,
+      ),
+      onSelected: (String value) {
+        switch (value) {
+          case 'like':
+            songLikeStatus.value = !songLikeStatus.value;
+            updateSongLikeStatus(
+              song['ytid'],
+              songLikeStatus.value,
+            );
+            final likedSongsLength = currentLikedSongsLength.value;
+            currentLikedSongsLength.value = songLikeStatus.value
+                ? likedSongsLength + 1
+                : likedSongsLength - 1;
+        }
+      },
+      itemBuilder: (BuildContext context) {
+        return [
+          PopupMenuItem<String>(
+            value: 'like',
+            child: ValueListenableBuilder<bool>(
+              valueListenable: songLikeStatus,
+              builder: (_, value, __) {
+                return Row(
+                  children: [
+                    Icon(
                       value ? Icons.favorite_rounded : Icons.favorite_border_rounded,
                       color: value ? Theme.of(context).colorScheme.secondary : Theme.of(context).iconTheme.color,
                     ),
-                    onPressed: () {
-                      songLikeStatus.value = !songLikeStatus.value;
-                      updateSongLikeStatus(
-                        song['ytid'],
-                        songLikeStatus.value,
-                      );
-                      final likedSongsLength = currentLikedSongsLength.value;
-                      currentLikedSongsLength.value =
-                      value ? likedSongsLength + 1 : likedSongsLength - 1;
-                    },
-                  );
-                },
-              ),
-              if (onRemove != null)
-                IconButton(
-                  color: primaryColor,
-                  icon: const Icon(FluentIcons.delete_24_filled),
-                  onPressed: () => onRemove!(),
-                ),
-
-            ],
-          ),
-    Column(
-    children: [
-        ValueListenableBuilder<bool>(
-          valueListenable: songOfflineStatus,
-          builder: (_, value, __) {
-            return IconButton(
-              color: primaryColor,
-              icon: Icon(
-                value ? Icons.download_done_rounded : Icons.download_rounded,
-                color: value ? Theme.of(context).colorScheme.secondary : Theme.of(context).iconTheme.color,
-              ),
-              onPressed: () {
-                if (value) {
-                  removeSongFromOffline(song['ytid']);
-                } else {
-                  makeSongOffline(song);
-                }
-
-                songOfflineStatus.value = !songOfflineStatus.value;
+                    const SizedBox(width: 8),
+                    Text(
+                      value
+                          ? context.l10n!.removeFromLikedSongs
+                          : context.l10n!.addToLikedSongs,
+                    ),
+                  ],
+                );
               },
-            );
-          },
-        ),
-        if (showMusicDuration && song['duration'] != null)
-          Text(formatDuration(song['duration'])),
-      ],
-    ),
-    ],
-    );
-  }
+            ),
+          ),
+
+          PopupMenuItem<String>(
+            child: Row(
+              children: [
+                Icon(FluentIcons.clock_12_filled, color: primaryColor),
+                const SizedBox(width: 8),
+                if (showMusicDuration && song['duration'] != null)
+                  Text(formatDuration(song['duration'])),
+              ],
+            ),
+          )
+        ];
+      },
+    );}
 }
 
 void showAddToPlaylistDialog(BuildContext context, dynamic song) {

@@ -20,14 +20,20 @@
  */
 
 import 'dart:async';
-
+import 'dart:io';
+import 'dart:ui';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:get_it/get_it.dart';
+import 'package:hive/hive.dart';
 import 'package:shrayesh_patro/API/shrayesh_patro.dart';
 import 'package:shrayesh_patro/Extra/downbar.dart';
 import 'package:shrayesh_patro/extensions/l10n.dart';
 import 'package:shrayesh_patro/main.dart';
 import 'package:shrayesh_patro/models/position_data.dart';
 import 'package:shrayesh_patro/screens/search_page.dart';
+import 'package:shrayesh_patro/screens/sideup-view.dart';
 import 'package:shrayesh_patro/services/settings_manager.dart';
 import 'package:shrayesh_patro/utilities/formatter.dart';
 import 'package:shrayesh_patro/utilities/mediaitem.dart';
@@ -40,7 +46,10 @@ import 'package:audio_service/audio_service.dart';
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_flip_card/flutter_flip_card.dart';
+import 'package:sliding_up_panel/sliding_up_panel.dart';
 
+import '../Backup/config.dart';
+import '../Backup/dominant_color.dart';
 import '../Backup/seek_bar.dart';
 import '../Backup/textinput_dialog.dart';
 import '../Downloads/download_button.dart';
@@ -54,7 +63,14 @@ class PlayingPage extends StatefulWidget {
 }
 
 class _PlayingPageState extends State<PlayingPage> {
-
+  final String gradientType = Hive.box('settings')
+      .get('gradientType', defaultValue: 'halfDark')
+      .toString();
+  final bool getLyricsOnline =
+  Hive.box('settings').get('getLyricsOnline', defaultValue: true) as bool;
+  final MyTheme currentTheme = GetIt.I<MyTheme>();
+  final ValueNotifier<List<Color?>?> gradientColor =
+  ValueNotifier<List<Color?>?>(GetIt.I<MyTheme>().playGradientColor);
   late Duration _time;
 
   bool isSharePopupShown = false;
@@ -174,151 +190,346 @@ class _PlayingPageState extends State<PlayingPage> {
       },
     );
   }
-
+  void updateBackgroundColors(List<Color?> value) {
+    gradientColor.value = value;
+    return;
+  }
 
 
   @override
   Widget build(BuildContext context) {
+    BuildContext? scaffoldContext;
     final size = MediaQuery
         .of(context)
         .size;
-    return Scaffold(
-      appBar: AppBar(backgroundColor: Colors.transparent,
-          leading: IconButton(
-            icon: const Icon(Icons.expand_more_rounded),
-            tooltip: context.l10n!.back,
-            onPressed: () {
-              Navigator.pop(context);
-            },
-          ),
-          actions: <Widget>[
-            IconButton(
-              icon: const Icon(Icons.lyrics_rounded),
-              tooltip: 'Lyrice',
-              onPressed: _lyricsController.flipcard,
-            ), //IconButton
-
-            PopupMenuButton<int>(
-                itemBuilder: (context) => [
-                  // PopupMenuItem 1
-                  PopupMenuItem(
-                    value: 1,
-                    child: Row(
-                      children: [
-                        Icon(
-                          CupertinoIcons.search,
-                          color: Theme.of(context).iconTheme.color,
-                        ),
-                        const SizedBox(width: 10.0),
-                        Text(
-                          context.l10n!.searchVideo,
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // PopupMenuItem 2
-                  PopupMenuItem(
-                    value: 2,
-                    child: Row(
-                      children: [
-                        Icon(
-                          CupertinoIcons.timer,
-                          color: Theme.of(context).iconTheme.color,
-                        ),
-                        const SizedBox(width: 10.0),
-                        Text(
-                          context.l10n!.sleepTimer,
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-                offset: const Offset(0, 40),
-                elevation: 0,
-                // on selected we show the dialog box
-                onSelected: (value) {
-                  // if value 1 show dialog
-                  if (value == 1) {
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) =>
-                            const SearchPage(
-                            )
-                        )
-                    );
-                  } else if (value == 2) {
-                    showDialog(
-                      context: context,
-                      builder: (context) {
-                        return SimpleDialog(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(15.0),
-                          ),
-                          title: Text(
-                            context.l10n!.sleepTimer,
-                            style: TextStyle(
-                              color:
-                              Theme
-                                  .of(context)
-                                  .colorScheme
-                                  .secondary,
-                            ),
-                          ),
-                          contentPadding: const EdgeInsets.all(10.0),
-                          children: [
-                            ListTile(
-                              title: Text(
-                                context.l10n!.sleepDur,
-                              ),
-                              subtitle: Text(
-                                context.l10n!.sleepDurSub,
-                              ),
-                              dense: true,
-                              onTap: () {
-                                Navigator.pop(context);
-                                setTimer(
-                                  context,
-                                  scaffoldContext,
-                                );
-                              },
-                            ),
-                          ],
-                        );
-                      },
-                    );
-                  }
-                }
-            )
-          ]
-      ),
-      body: StreamBuilder<MediaItem?>(
-        stream: audioHandler.mediaItem,
-        builder: (context, snapshot) {
-          if (snapshot.data == null || !snapshot.hasData) {
-            return const SizedBox.shrink();
-          } else {
-            final metadata = snapshot.data!;
-            final screenHeight = size.height;
-
-            return Column(
-              children: [
-                SizedBox(height: screenHeight * 0.02),
-                buildArtwork(context, size, metadata),
-                SizedBox(height: screenHeight * 0.01),
-                if (!(metadata.extras?['isLive'] ?? false))
-                  _buildPlayer(
-                    context,
-                    size,
-                    metadata.extras?['ytid'],
-                    metadata,
-                  ),
-              ],
-            );
-          }
+    return Dismissible(
+        direction: DismissDirection.down,
+        background: const ColoredBox(color: Colors.transparent),
+        key: const Key('playScreen'),
+        onDismissed: (direction) {
+          Navigator.pop(context);
         },
-      ),
+        child: StreamBuilder<MediaItem?>(
+            stream: audioHandler.mediaItem,
+            builder: (context, snapshot) {
+              final MediaItem? mediaItem = snapshot.data;
+              if (mediaItem == null) return const SizedBox();
+              if (mediaItem.artUri != null && mediaItem.artUri.toString() != '') {
+                mediaItem.artUri.toString().startsWith('file')
+                    ? getColors(
+                  imageProvider: FileImage(
+                    File(
+                      mediaItem.artUri!.toFilePath(),
+                    ),
+                  ),
+
+                ).then((value) => updateBackgroundColors(value))
+                    : getColors(
+                  imageProvider: CachedNetworkImageProvider(
+                    mediaItem.artUri.toString(),
+                  ),
+                ).then((value) => updateBackgroundColors(value));
+              }
+              return ValueListenableBuilder(
+                valueListenable: gradientColor,
+                child: SafeArea(
+                  child: Scaffold(
+                      resizeToAvoidBottomInset: false,
+                      backgroundColor: Colors.transparent,
+                      appBar: AppBar(
+                          elevation: 0,
+                          backgroundColor: Colors.transparent,
+                          centerTitle: true,
+                          leading: IconButton(
+                            icon: const Icon(Icons.expand_more_rounded),
+                            tooltip: AppLocalizations.of(context)!.back,
+                            onPressed: () {
+                              Navigator.pop(context);
+                            },
+                          ),
+                          actions: [
+                            IconButton(
+                              icon: const Icon(Icons.lyrics_rounded),
+                              tooltip: 'Lyrice',
+                              onPressed: _lyricsController.flipcard,
+                            ), //IconButton
+
+                            PopupMenuButton<int>(
+                                itemBuilder: (context) => [
+                                  // PopupMenuItem 1
+                                  PopupMenuItem(
+                                    value: 1,
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          CupertinoIcons.search,
+                                          color: Theme.of(context).iconTheme.color,
+                                        ),
+                                        const SizedBox(width: 10.0),
+                                        Text(
+                                          context.l10n!.searchVideo,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+
+                                  // PopupMenuItem 2
+                                  PopupMenuItem(
+                                    value: 2,
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          CupertinoIcons.timer,
+                                          color: Theme.of(context).iconTheme.color,
+                                        ),
+                                        const SizedBox(width: 10.0),
+                                        Text(
+                                          context.l10n!.sleepTimer,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                                offset: const Offset(0, 40),
+                                elevation: 0,
+                                // on selected we show the dialog box
+                                onSelected: (value) {
+                                  // if value 1 show dialog
+                                  if (value == 1) {
+                                    Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (context) =>
+                                            const SearchPage(
+                                            )
+                                        )
+                                    );
+                                  } else if (value == 2) {
+                                    showDialog(
+                                      context: context,
+                                      builder: (context) {
+                                        return SimpleDialog(
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(15.0),
+                                          ),
+                                          title: Text(
+                                            context.l10n!.sleepTimer,
+                                            style: TextStyle(
+                                              color:
+                                              Theme
+                                                  .of(context)
+                                                  .colorScheme
+                                                  .secondary,
+                                            ),
+                                          ),
+                                          contentPadding: const EdgeInsets.all(10.0),
+                                          children: [
+                                            ListTile(
+                                              title: Text(
+                                                context.l10n!.sleepDur,
+                                              ),
+                                              subtitle: Text(
+                                                context.l10n!.sleepDurSub,
+                                              ),
+                                              dense: true,
+                                              onTap: () {
+                                                Navigator.pop(context);
+                                                setTimer(
+                                                  context,
+                                                  scaffoldContext,
+                                                );
+                                              },
+                                            ),
+                                          ],
+                                        );
+                                      },
+                                    );
+                                  }
+                                }
+                            )
+                          ]
+                      ),
+                      body: SlidingUpPanel(
+                        color: Colors.transparent,
+                        padding: EdgeInsets.zero,
+                        margin: EdgeInsets.zero,
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(20),
+                          topRight: Radius.circular(20),
+                        ),
+                        boxShadow: const [],
+                        minHeight: 50 +
+                            MediaQuery
+                                .of(context)
+                                .padding
+                                .bottom,
+                        panel: ClipRRect(
+                          borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(20),
+                              topRight: Radius.circular(20)),
+                          child: Container(
+                            width: 20, //////// ..test test   ////////////////////////
+                            alignment: Alignment.center,
+                            decoration: const BoxDecoration(
+                              borderRadius: BorderRadius.only(
+                                  topLeft: Radius.circular(20),
+                                  topRight:
+                                  Radius.circular(20)),
+                            ),
+                            child: Column(
+                              crossAxisAlignment:
+                              CrossAxisAlignment.center,
+                              mainAxisSize: MainAxisSize.max,
+                              children: [
+                                ClipRRect(
+                                  child: BackdropFilter(
+                                    filter: ImageFilter.blur(
+                                        sigmaX: 3, sigmaY: 3),
+                                    child: Container(
+                                      height: 50 +
+                                          MediaQuery
+                                              .of(context)
+                                              .padding
+                                              .bottom,
+                                      width: double.maxFinite,
+                                      decoration: BoxDecoration(
+                                        color: Theme
+                                            .of(context)
+                                            .scaffoldBackgroundColor
+                                            .withAlpha(70),
+                                        borderRadius:
+                                        const BorderRadius
+                                            .only(
+                                            topLeft: Radius
+                                                .circular(
+                                                20),
+                                            topRight: Radius
+                                                .circular(
+                                                20)),
+                                      ),
+                                      child: Column(
+                                        mainAxisSize:
+                                        MainAxisSize.max,
+                                        mainAxisAlignment:
+                                        MainAxisAlignment
+                                            .center,
+                                        children: [
+                                          Container(
+                                            height: 5,
+                                            width: 50,
+                                            decoration:
+                                            BoxDecoration(
+                                              color: Theme.of(context).colorScheme.secondary,
+                                              borderRadius:
+                                              BorderRadius
+                                                  .circular(
+                                                  20),
+                                            ),
+                                          ),
+                                          const SizedBox(
+                                              height: 8),
+                                          Text(
+                                              AppLocalizations.of(context)!
+                                                  .upNext
+
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const Expanded(
+                                    child: Sideup_View(page: 'recents',)
+                                )
+                              ],
+                            ),
+                          ),
+                        ),
+                        body: StreamBuilder<MediaItem?>(
+                          stream: audioHandler.mediaItem,
+                          builder: (context, snapshot) {
+                            if (snapshot.data == null || !snapshot.hasData) {
+                              return const SizedBox.shrink();
+                            } else {
+                              final metadata = snapshot.data!;
+                              final screenHeight = size.height;
+
+                              return Column(
+                                children: [
+                                  SizedBox(height: screenHeight * 0.02),
+                                  buildArtwork(context, size, metadata),
+                                  SizedBox(height: screenHeight * 0.01),
+                                  if (!(metadata.extras?['isLive'] ?? false))
+                                    _buildPlayer(
+                                      context,
+                                      size,
+                                      metadata.extras?['ytid'],
+                                      metadata,
+                                    ),
+                                ],
+                              );
+                            }
+                          },
+                        ),
+                      )
+                  ),
+                ),
+                builder: (BuildContext context, List<Color?>? value, Widget? child) {
+                  return AnimatedContainer(
+                    duration: const Duration(milliseconds: 600),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: gradientType == 'simple'
+                            ? Alignment.topLeft
+                            : Alignment.topCenter,
+                        end: gradientType == 'simple'
+                            ? Alignment.bottomRight
+                            : (gradientType == 'halfLight' ||
+                            gradientType == 'halfDark')
+                            ? Alignment.center
+                            : Alignment.bottomCenter,
+                        colors: gradientType == 'simple'
+                            ? Theme.of(context).brightness == Brightness.dark
+                            ? currentTheme.getBackGradient()
+                            : [
+                          const Color(0xfff5f9ff),
+                          Colors.white,
+                        ]
+                            : Theme.of(context).brightness == Brightness.dark
+                            ? [
+                          // Top part
+                          if (gradientType == 'halfDark' ||
+                              gradientType == 'fullDark' ||
+                              gradientType == 'fullDarkOnly')
+                            value?[1] ?? Colors.grey[900]!
+                          else
+                            value?[0] ?? Colors.grey[900]!,
+                          // Bottom part
+                          if (gradientType == 'fullMix' ||
+                              gradientType == 'fullMixDarker' ||
+                              gradientType == 'fullMixBlack' ||
+                              gradientType == 'fullDarkOnly')
+                            value?[1] ?? Colors.black
+                          else
+                            Colors.black,
+                          // Extra bottom part incase of full darker and black
+                          if (gradientType == 'fullMixDarker')
+                            value?[1] ?? Colors.black,
+                          if (gradientType == 'fullMixBlack')
+                            Colors.black,
+                        ]
+                            : [
+                          value?[0] ?? const Color(0xfff5f9ff),
+                          Colors.white,
+                        ],
+                      ),
+                    ),
+                    child: child,
+                  );
+                },
+              );
+            }
+        )
     );
   }
 
@@ -648,7 +859,7 @@ class _PlayingPageState extends State<PlayingPage> {
           valueListenable: songOfflineStatus,
           builder: (_, value, __) {
             return DownloadButton(
-              size: 20.0,
+              size: 30.0,
               icon: 'download',
               data: mediaItemToMap(mediaItem)
             );

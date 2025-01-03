@@ -1,6 +1,8 @@
 {
   "ne": [
     "playerScreenBackground",
-    "playerScreenBackgroundSub"
+    "playerScreenBackgroundSub",
+    "removeFromLikedSongs",
+    "addToLikedSongs"
   ]
 }

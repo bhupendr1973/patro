@@ -1,7 +1,7 @@
 name: shrayesh_patro
 description: "A Music & Calendar App Developed by Bhupendra Dahal. Rajpurohit (Google Me)"
 publish_to: "none"
-version: 7.2.4+1
+version: 7.2.4+110 # run update.sh after changing the version
 
 environment:
   sdk: ">=3.3.2 <4.0.0"

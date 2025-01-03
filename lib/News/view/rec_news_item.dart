@@ -70,7 +70,7 @@ class RecNewsItem extends StatelessWidget {
                           Text(
                             newsModel.title!,
                             style: const TextStyle(
-                                fontSize: 16.0,
+                                fontSize: 18.0,
                                 fontWeight: FontWeight.bold
 
                             ),
@@ -79,7 +79,8 @@ class RecNewsItem extends StatelessWidget {
                           Text(
                             newsModel.description!,
                             style: const TextStyle(
-                              fontSize: 14,
+                              fontSize: 15,
+                              color: Colors.grey,
                               fontWeight: FontWeight.w300,
 
                             ),
@@ -119,10 +120,10 @@ class RecNewsItem extends StatelessWidget {
                               (context.width * 0.009).spaceX,
                               Text(
                                 NepaliMoment.fromAD(DateTime.parse(formattedDate)),
-                                style: TextStyle(
+                                style: const TextStyle(
                                   fontWeight: FontWeight.w400,
-                                  fontSize: 14,
-                                  color: Theme.of(context).colorScheme.secondary,
+                                  fontSize: 15,
+
                                 ),
                               ),
                             ],
